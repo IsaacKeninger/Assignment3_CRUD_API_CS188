@@ -18,6 +18,16 @@ class Database:
                     password TEXT NOT NULL
                     )""")
 
+    def create_teams_table(self):
+        with self.conn:
+            self.conn.execute("""
+                CREATE TABLE IF NOT EXISTS teams (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                leauge TEXT NOT NULL,
+                mascot TEXT NOT NULL,
+                tls TEXT NOT NULL)""")            
+
     def add_user(self, username, hashed_pwd):
         try:
             with self.conn:

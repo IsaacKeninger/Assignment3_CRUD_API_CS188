@@ -1,8 +1,14 @@
-from flask_restful import Resource
+from flask_restful import Resource, g
 from auth import auth_required
 
-# example endpoint
-class Profile(Resource):
+class UserResource(Resource):
     @auth_required
-    def get(self):
-        return {"message": f"Hello, {g.username}!"}
+
+    def post(self):
+"""
+    def get(self, id):
+
+    def patch(self, id):
+
+    def delete(self, id):
+"""
