@@ -8,6 +8,7 @@ class Database:
     def __init__(self):
         self.conn = connect()
         self.create_users_table()
+        self.create_teams_table()
 
     def create_users_table(self):
         with self.conn:
@@ -24,7 +25,7 @@ class Database:
                 CREATE TABLE IF NOT EXISTS teams (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,
-                leauge TEXT NOT NULL,)""")            
+                leauge TEXT NOT NULL)""")            
 
     def add_user(self, username, hashed_pwd):
         try:

@@ -4,9 +4,6 @@ from flask_restful import Api
 from flask_talisman import Talisman
 import os 
 
-app = Flask(__name__)
-api = Api(app)
-
 def init_api(app):
     api = Api(app)
     api.add_resource(Teams, '/teams')
@@ -14,8 +11,7 @@ def init_api(app):
 def create_app(with_ssl=True) -> Flask:
     app = Flask(__name__)
     app.config["PREFERRED_URL_SCHEME"] = "https"
-    ssl_context = (_CERTIFICATE_PATH, _KEYFILE_PATH) if with_ssl else None
-    Talisman(app, force_https=True)
+    Talisman(app, force_https=with_ssl)
     init_api(app)
     @app.teardown_appcontext
     def close_db(exception):
@@ -28,6 +24,7 @@ def run_app(debug: bool = True, with_ssl: bool = True) -> None:
     ssl_context = (_CERTIFICATE_PATH, _KEYFILE_PATH) if with_ssl else None
     create_app().run(debug=debug, ssl_context=ssl_context)
 
+app = create_app(with_ssl=False)
 # Run
 if __name__ == "__main__":
     app.run(debug=True)

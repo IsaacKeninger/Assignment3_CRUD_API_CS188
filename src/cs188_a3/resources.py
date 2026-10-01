@@ -21,13 +21,13 @@ class Teams(Resource):
 
         # Insert Team into DB
         db = get_db()
-        cursor = db.cursor()
+        cursor = db.conn.cursor()
         cursor.execute(
             "INSERT INTO teams (name, leauge) VALUES (?, ?);",
             (args['name'], args['leauge'])
         )
         new_id = cursor.lastrowid
-        db.commit()
+        db.conn.commit()
 
         # Generate  Output
         response = {
@@ -36,4 +36,4 @@ class Teams(Resource):
             "leauge": args['leauge']
         }
 
-        return jsonify(response), 201, {"Location": f"/tesms/{new_id}"} 
+        return response, 201, {"Location": f"/teams/{new_id}"} 
