@@ -65,12 +65,6 @@ class Profile(Resource):
     def get(self):
         return {"message": f"Hello, {g.username}!"}
 
-# Database Connection
-def get_db() -> Database:
-    if "db" not in g:
-        g.db = Database()
-    return g.db
-
 #API
 def init_api(app):
     api = Api(app)

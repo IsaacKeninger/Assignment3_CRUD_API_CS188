@@ -1,4 +1,5 @@
 import sqlite3
+from flask import g
 
 def connect():
     return sqlite3.connect('activity.db')
@@ -35,3 +36,8 @@ class Database:
                        )
         row = cursor.fetchone()
         return row[0] if row is not None else None
+
+def get_db() -> Database:
+    if "db" not in g:
+        g.db = Database()
+    return g.db
