@@ -1,4 +1,4 @@
-from flask import jsonify, url_for
+from flask import jsonify
 
 from flask_restful import Resource, reqparse
 from auth import auth_required
@@ -35,6 +35,5 @@ class Teams(Resource):
             "name": args['name'],
             "leauge": args['leauge']
         }
-        location = url_for('get_resource', resource_id=new_id)
 
-        return jsonify(response), 201, {"Location": location} 
+        return jsonify(response), 201, {"Location": f"/tesms/{new_id}"} 

@@ -1,17 +1,15 @@
 from flask import Flask, g
+from cs188_a3.resources import Teams
 from flask_restful import Api
 from flask_talisman import Talisman
-from api_activity._constants import PROJECT_ROOT
 import os 
-
-_KEYFILE_PATH = os.path.join(PROJECT_ROOT, "MyKey.pem")
-_CERTIFICATE_PATH = os.path.join(PROJECT_ROOT, "MyCertificate.crt")
 
 app = Flask(__name__)
 api = Api(app)
 
 def init_api(app):
     api = Api(app)
+    api.add_resource(Teams, '/teams')
 
 def create_app(with_ssl=True) -> Flask:
     app = Flask(__name__)

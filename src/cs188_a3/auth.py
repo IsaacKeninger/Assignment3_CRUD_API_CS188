@@ -1,7 +1,8 @@
 from functools import wraps
 
-from flask import reqparse, g, request
-from flask_restful import Resource, Bcrypt
+from flask import g
+from flask_restful import Resource, reqparse, request
+from flask_bcrypt import Bcrypt
 from db import get_db
 
 # Endpoint Authorization Decorator
