@@ -24,9 +24,7 @@ class Database:
                 CREATE TABLE IF NOT EXISTS teams (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,
-                leauge TEXT NOT NULL,
-                mascot TEXT NOT NULL,
-                tls TEXT NOT NULL)""")            
+                leauge TEXT NOT NULL,)""")            
 
     def add_user(self, username, hashed_pwd):
         try:
