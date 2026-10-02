@@ -57,3 +57,11 @@ class Teams(Resource):
         )
         response = cursor.fetchall()
         return response, 201
+
+"""
+TO DO
+
+    def patch(self, id):
+
+    def delete(self, id):
+"""
