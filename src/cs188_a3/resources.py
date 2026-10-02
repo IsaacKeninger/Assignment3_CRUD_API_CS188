@@ -36,7 +36,17 @@ class Teams(Resource):
         }
 
         return response, 201, {"Location": f"/teams/{new_id}"} 
+    
+    def get(self):
+        db = get_db()
 
+        cursor = db.conn.cursor()
+        cursor.execute(
+            "SELECT * FROM teams",
+        )
+        response = cursor.fetchall()
+        return response, 201
+    
     def get(self, leauge):
         db = get_db()
 
