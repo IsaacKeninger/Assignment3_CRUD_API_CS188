@@ -4,6 +4,7 @@ from db import get_db
 
 class Teams(Resource):
 
+    @auth_required
     def post(self):
 
         parser = reqparse.RequestParser()

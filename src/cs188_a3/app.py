@@ -1,4 +1,5 @@
 from flask import Flask, g
+from cs188_a3.auth import Register
 from cs188_a3.resources import Teams
 from flask_restful import Api
 from flask_talisman import Talisman
@@ -6,7 +7,8 @@ import os
 
 def init_api(app):
     api = Api(app)
-    api.add_resource(Teams, '/teams/<string:leauge>')
+    api.add_resource(Register, '/register')
+    api.add_resource(Teams, '/teams')
 
 def create_app(with_ssl=True) -> Flask:
     app = Flask(__name__)
