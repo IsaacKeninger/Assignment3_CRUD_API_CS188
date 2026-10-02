@@ -1,5 +1,3 @@
-from flask import jsonify
-
 from flask_restful import Resource, reqparse
 from auth import auth_required
 from db import get_db
@@ -37,3 +35,14 @@ class Teams(Resource):
         }
 
         return response, 201, {"Location": f"/teams/{new_id}"} 
+
+    def get(self, leauge):
+        db = get_db()
+
+        cursor = db.conn.cursor()
+        cursor.execute(
+            "SELECT * FROM teams WHERE leauge = ?",
+            (leauge,)
+        )
+        response = cursor.fetchall()
+        return response, 201

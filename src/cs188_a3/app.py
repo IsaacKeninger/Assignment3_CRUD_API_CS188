@@ -6,7 +6,7 @@ import os
 
 def init_api(app):
     api = Api(app)
-    api.add_resource(Teams, '/teams')
+    api.add_resource(Teams, '/teams/<string:leauge>')
 
 def create_app(with_ssl=True) -> Flask:
     app = Flask(__name__)
