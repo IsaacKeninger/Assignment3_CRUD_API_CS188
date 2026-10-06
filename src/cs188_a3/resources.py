@@ -71,3 +71,40 @@ class Teams(Resource):
 
         response = cursor.fetchall()
         return response, 201
+
+    # Tried out AI on i
+    def patch(self):
+        parser = reqparse.RequestParser()
+
+        parser.add_argument(
+            "id", type=str, required=True, location='args'
+        )
+        parser.add_argument(
+            "league", type=str, required=False, location='json'
+        )
+
+        args = parser.parse_args()
+        team_id = args["id"]
+        league = args["league"]
+
+        db = get_db()
+        cursor = db.conn.cursor()
+
+        if league:
+            cursor.execute(
+                "UPDATE teams SET league = ? WHERE id = ?",
+                (league, team_id)
+            )
+            db.conn.commit()
+
+        cursor.execute(
+            "SELECT * FROM teams WHERE id = ?",
+            (team_id,)
+        )
+        team = cursor.fetchone()
+        if team is None:
+            return {"message": f"Team {team_id} not found"}, 404
+
+        return team, 200
+
+    
