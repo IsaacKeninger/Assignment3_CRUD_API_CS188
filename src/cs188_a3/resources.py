@@ -73,6 +73,7 @@ class Teams(Resource):
         return response, 201
 
     # Tried out AI on implement. Claude Code.
+    @auth_required
     def patch(self):
         parser = reqparse.RequestParser()
 
@@ -107,6 +108,7 @@ class Teams(Resource):
 
         return team, 200
 
+    @auth_required
     def delete(self):
         parser = reqparse.RequestParser()
 
