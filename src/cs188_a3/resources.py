@@ -42,16 +42,27 @@ class Teams(Resource):
         parser.add_argument(
             "league", type=str, required=False, location='args'
         )
+        parser.add_argument(
+            "id", type=str, required=False, location='args'
+        )
+
         args = parser.parse_args()
         league = args["league"]
+        team_id = args["id"]
 
         db = get_db()
 
         cursor = db.conn.cursor()
-        if league is not None:
+
+        if team_id:
+            cursor.execute(
+                "SELECT * FROM teams WHERE id = ?",
+                (team_id,)
+            )
+        elif league:
             cursor.execute(
                 "SELECT * FROM teams WHERE league = ?",
-                (args["league"],)
+                (league,)
             )
         else:
             cursor.execute(
