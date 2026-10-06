@@ -72,7 +72,7 @@ class Teams(Resource):
         response = cursor.fetchall()
         return response, 201
 
-    # Tried out AI on i
+    # Tried out AI on implement. Claude Code.
     def patch(self):
         parser = reqparse.RequestParser()
 
@@ -107,4 +107,24 @@ class Teams(Resource):
 
         return team, 200
 
-    
+    def delete(self):
+        parser = reqparse.RequestParser()
+
+        parser.add_argument(
+            "id", type=str, required=True, location='args'
+        )
+        
+        args = parser.parse_args()
+        team_id = args["id"]
+
+        db = get_db()
+        cursor = db.conn.cursor()
+
+        cursor.execute("DELETE FROM teams WHERE id = ?",
+                        (team_id,))
+        db.conn.commit()
+
+        if cursor.rowcount == 0: # Meaning, if no rows have changed.
+            return {"message": f"Team {team_id} not found"}, 404
+        
+        return {"message": f"Team {team_id} Successfully Deleted."}, 201
