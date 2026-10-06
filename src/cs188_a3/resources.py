@@ -38,30 +38,25 @@ class Teams(Resource):
         return response, 201, {"Location": f"/teams/{new_id}"} 
     
     def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            "league", type=str, required=False, location='args'
+        )
+        args = parser.parse_args()
+        league = args["league"]
+
         db = get_db()
 
         cursor = db.conn.cursor()
-        cursor.execute(
-            "SELECT * FROM teams",
-        )
-        response = cursor.fetchall()
-        return response, 201
-    
-    def get(self, league):
-        db = get_db()
-
-        cursor = db.conn.cursor()
-        cursor.execute(
-            "SELECT * FROM teams WHERE league = ?",
-            (league,)
-        )
+        if league is not None:
+            cursor.execute(
+                "SELECT * FROM teams WHERE league = ?",
+                (args["league"],)
+            )
+        else:
+            cursor.execute(
+                "SELECT * FROM teams",
+            )
 
         response = cursor.fetchall()
         return response, 201
-"""
-TO DO
-
-    def patch(self, id):
-
-    def delete(self, id):
-"""
