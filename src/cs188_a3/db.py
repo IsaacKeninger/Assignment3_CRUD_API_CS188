@@ -38,6 +38,14 @@ class Database:
         except sqlite3.IntegrityError:
             return False
 
+    def get_user_id(self, username):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT id FROM users WHERE username = ?",
+                       (username,)
+                       )
+        row = cursor.fetchone()
+        return row[0] if row is not None else None
+
     def get_password(self, username) -> str:
         cursor = self.conn.cursor()
         cursor.execute("SELECT password FROM users WHERE username = ?",

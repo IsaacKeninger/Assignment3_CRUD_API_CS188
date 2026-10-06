@@ -9,7 +9,7 @@ def init_api(app):
     api.add_resource(Register, '/register')
     api.add_resource(Teams, '/teams')
 
-def create_app(with_ssl=True) -> Flask:
+def create_app(with_ssl=True, db="activity.db") -> Flask:
     app = Flask(__name__)
     app.config["PREFERRED_URL_SCHEME"] = "https"
     Talisman(app, force_https=with_ssl)

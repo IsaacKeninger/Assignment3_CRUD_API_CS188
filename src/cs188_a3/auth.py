@@ -25,7 +25,7 @@ def auth_required(func):
 
 # Register User Endpoint
 class Register(Resource):
-    def put(self):
+    def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument(
             "username", type=str, required=True, location='json',
@@ -48,6 +48,8 @@ class Register(Resource):
 
         db = get_db()
         if db.add_user(username, hashed_pwd):
-            return {"message": f"User {username} registered successfully"}
+            user_id = g.db.get_user_id(username)
+            return {"message": f"User {username} registered successfully. User ID: {user_id}"}
         else:
-            return {"message": f"User {username} already exists"}, 409
+            user_id = g.db.get_user_id(username)
+            return {"message": f"User {username} already exists. User ID: {user_id}"}, 409

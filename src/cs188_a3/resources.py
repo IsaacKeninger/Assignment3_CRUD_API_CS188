@@ -13,8 +13,8 @@ class Teams(Resource):
             help="Team name cannot be blank.",
         )
         parser.add_argument(
-            "leauge", type=str, required=True, location='json',
-            help="Team must be in a leauge",
+            "league", type=str, required=True, location='json',
+            help="Team must be in a league",
         )
         args = parser.parse_args()
 
@@ -22,8 +22,8 @@ class Teams(Resource):
         db = get_db()
         cursor = db.conn.cursor()
         cursor.execute(
-            "INSERT INTO teams (name, leauge) VALUES (?, ?);",
-            (args['name'], args['leauge'])
+            "INSERT INTO teams (name, league) VALUES (?, ?);",
+            (args['name'], args['league'])
         )
         new_id = cursor.lastrowid
         db.conn.commit()
@@ -32,7 +32,7 @@ class Teams(Resource):
         response = {
             "id": new_id,
             "name": args['name'],
-            "leauge": args['leauge']
+            "league": args['league']
         }
 
         return response, 201, {"Location": f"/teams/{new_id}"} 
@@ -47,17 +47,17 @@ class Teams(Resource):
         response = cursor.fetchall()
         return response, 201
     
-    def get(self, leauge):
+    def get(self, league):
         db = get_db()
 
         cursor = db.conn.cursor()
         cursor.execute(
-            "SELECT * FROM teams WHERE leauge = ?",
-            (leauge,)
+            "SELECT * FROM teams WHERE league = ?",
+            (league,)
         )
+
         response = cursor.fetchall()
         return response, 201
-
 """
 TO DO
 
