@@ -48,8 +48,8 @@ class Register(Resource):
 
         db = get_db()
         if db.add_user(username, hashed_pwd):
-            user_id = g.db.get_user_id(username)
+            user_id = g.db.fetch_user_id(username)
             return {"message": f"User {username} registered successfully. User ID: {user_id}"}
         else:
-            user_id = g.db.get_user_id(username)
+            user_id = g.db.fetch_user_id(username)
             return {"message": f"User {username} already exists. User ID: {user_id}"}, 409
