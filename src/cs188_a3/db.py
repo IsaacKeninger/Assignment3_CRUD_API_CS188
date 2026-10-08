@@ -8,7 +8,7 @@ class Database:
     def __init__(self):
         self.conn = connect()
         self.create_users_table()
-        self.create_teams_table()
+        self.create_reviews_table()
 
     def create_users_table(self):
         with self.conn:
@@ -19,14 +19,21 @@ class Database:
                     password TEXT NOT NULL
                     )""")
 
-    def create_teams_table(self):
+    def create_reviews_table(self):
         with self.conn:
-            self.conn.execute("""
-                CREATE TABLE IF NOT EXISTS teams (
+            self.conn.execute(""" # ai help!
+                CREATE TABLE reviews (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE,
-                league TEXT NOT NULL)""")            
-
+                user_id TEXT NOT NULL,
+                fixture_id INTEGER NOT NULL,
+                home_team TEXT, away_team TEXT,
+                home_goals INTEGER, away_goals INTEGER,
+                league TEXT, match_date TEXT,
+                rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 10),
+                review TEXT,
+                UNIQUE (user_id, fixture_id)
+                );""")
+            
     def add_user(self, username, hashed_pwd):
         try:
             with self.conn:

@@ -8,6 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+.env
 
 # Certificates
 MyCertificate.crt
+MyKey.pem

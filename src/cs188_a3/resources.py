@@ -2,7 +2,7 @@ from flask_restful import Resource, reqparse
 from auth import auth_required
 from db import get_db
 
-class Teams(Resource):
+class GameReviews(Resource):
 
     @auth_required
     def post(self):
