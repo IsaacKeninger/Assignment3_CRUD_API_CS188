@@ -97,7 +97,11 @@ def get_head_to_head(home_id, away_id, last=5):
     It will take in a home and an away id for teams as well as the specified number of games wanted.
     It will return details about those specific fixtures in python dictionary.
     """
-    response = _get("/fixtures/headtohead", {"h2h": f"{home_id}-{away_id}", "last": last})
+    # The free API plan rejects the "last" parameter, so fetch every meeting and keep the
+    # most recent played matches here (upcoming matches have no goals yet).
+    response = _get("/fixtures/headtohead", {"h2h": f"{home_id}-{away_id}"})
+    played = [m for m in response if m["goals"]["home"] is not None]
+    played.sort(key=lambda m: m["fixture"]["date"], reverse=True)
     return [
         {
             "date": m["fixture"]["date"],
@@ -105,7 +109,7 @@ def get_head_to_head(home_id, away_id, last=5):
             "away_team": m["teams"]["away"]["name"],
             "score": f'{m["goals"]["home"]}-{m["goals"]["away"]}',
         }
-        for m in response
+        for m in played[:last]
     ]
 
 # PARSER HELPER FUNCTIONS

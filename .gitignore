@@ -13,3 +13,6 @@ wheels/
 # Certificates
 MyCertificate.crt
 MyKey.pem
+
+# db
+*.db
