@@ -90,11 +90,21 @@ def get_review(db, review_id: int) -> dict:
 def list_reviews(db, league: str | None) -> list[dict]:
     return db.list_reviews(league)
 
-def patch_review(db, review_id: int, rating: int | None, review: str | None) -> dict:
+def _check_owner(db, user_id, review_id: int) -> None:
+    "Raise ReviewNotFound if the review doesn't exist, or Forbidden if user_id doesn't own it."
+    existing = get_review(db, review_id)
+    if str(existing["user_id"]) != str(user_id):
+        raise Forbidden(review_id)
+
+def patch_review(db, user_id, review_id: int, rating: int | None, review: str | None) -> dict:
+    "Update a review the user owns and return the updated review."
+    _check_owner(db, user_id, review_id)
     db.update_review(review_id, rating, review)
     return db.get_review(review_id)
 
-def delete_review(db, review_id: int) -> None:
+def delete_review(db, user_id, review_id: int) -> None:
+    "Delete a review the user owns."
+    _check_owner(db, user_id, review_id)
     db.delete_review(review_id)
 
 # CLAUDE CREATED THIS FUNCTION

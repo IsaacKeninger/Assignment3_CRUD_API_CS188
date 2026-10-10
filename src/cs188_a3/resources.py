@@ -49,7 +49,9 @@ class GameReviews(Resource):
         try:
             review = services.patch_review(get_db(), g.user_id, review_id, changes["rating"], changes["review"])
         except services.ReviewNotFound:
-            return {"message": f"Fixture {review_id} not found."}, 404       
+            return {"message": f"Review {review_id} not found."}, 404
+        except services.Forbidden:
+            return {"message": "You can only edit your own reviews."}, 403
 
         return review, 200
 
