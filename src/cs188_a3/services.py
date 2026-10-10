@@ -9,6 +9,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from flask_restful import reqparse, abort
 
 load_dotenv() # Load in Environment Variable
 
@@ -25,6 +26,41 @@ class ExternalAPIError(Exception):
     """
     The API did not answer or other errors occured.
     """
+
+# PARSER HELPER FUNCTIONS
+def parse_review() -> dict:
+    "Read and Validate the body of POST /reviews"
+    parser = reqparse.RequestParser()
+    parser.add_argument("fixture_id", type=int, required=True, location='json',
+                        help="fixture_id is required and must be an integer.")
+    parser.add_argument("rating", type=int, required=True, location='json',
+                        help="rating is required and must be an integer.")
+    parser.add_argument("review", type=str, required=False, location='json')
+    return parser.parse_args()
+
+def parse_review_changes() -> dict:
+    "Read and validate the body of PATCH /reviews/<id>. Both fields are optional."
+    parser = reqparse.RequestParser()
+    parser.add_argument("rating", type=int, required=False, location='json',
+                        help="rating must be an integer.")
+    parser.add_argument("review", type=str, required=False, location='json')
+    changes = parser.parse_args()
+
+    if changes["rating"] is None and changes["review"] is None:
+        abort(400, message="Provide a rating and/or review to update.")
+    if changes["rating"] is not None and not 1 <= changes["rating"] <= 10:
+        abort(400, message="rating must be between 1 and 10.")
+    if changes["review"] is not None and not changes["review"].strip():
+        abort(400, message="review cannot be blank.")
+    return changes
+
+# CLAUDE
+def parse_filters() -> dict:
+    "Read the optional query parameters of GET /reviews."
+    parser = reqparse.RequestParser()
+    parser.add_argument("league", type=str, required=False, location='args')
+    return parser.parse_args()
+
 
 # CLAUDE CREATED THIS FUNCTION
 def _get(path, params):
