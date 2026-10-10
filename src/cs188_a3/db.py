@@ -62,7 +62,7 @@ class Database:
         # Claude was used here!
         with self.conn:
             self.conn.execute("""
-                CREATE TABLE reviews (
+                CREATE TABLE IF NOT EXISTS reviews (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id TEXT NOT NULL,
                 fixture_id INTEGER NOT NULL,
