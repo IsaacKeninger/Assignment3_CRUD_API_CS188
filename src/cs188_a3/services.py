@@ -9,6 +9,7 @@
     _check_owner helper and added the user_id parameter and ownership checks to patch_review and
     delete_review. Claude wrote the watchlist service functions (parse_watch, add_to_watchlist,
     list_watchlist, remove_from_watchlist) and the DuplicateWatch and WatchNotFound exceptions.
+    Claude also added the rating range and blank review checks to parse_review.
 """
 
 import os

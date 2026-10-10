@@ -4,7 +4,9 @@
     insert_review, get_review and list_reviews methods, and suggested update_review and
     delete_review, which I typed in and adjusted. Claude also pointed out bugs here (missing
     IF NOT EXISTS, user_id column type, hard-coded database path). Claude wrote the watchlist
-    table and its add_watch, list_watchlist and remove_watch methods. I either created the rest
+    table and its add_watch, list_watchlist and remove_watch methods. Claude showed how to pass the
+    database path into Database and read it in get_db from the app config, and fixed a syntax
+    error in my version of the Database constructor. I either created the rest
     of the file myself or it was copied over from past class activites and adjusted accordingly.
 """
 
