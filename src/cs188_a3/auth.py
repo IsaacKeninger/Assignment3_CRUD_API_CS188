@@ -49,14 +49,14 @@ class Register(Resource):
         if not username or not password:
             return {"message": "Username or Password is undefined."}, 400
         elif len(password) < 8:
-            return {"message": "Password must have a length of 8 or morecharacters."}
+            return {"message": "Password must have a length of 8 or morecharacters."}, 400
 
         hashed_pwd = Bcrypt().generate_password_hash(password).decode('utf-8')
 
         db = get_db()
         if db.add_user(username, hashed_pwd):
             user_id = g.db.fetch_user_id(username)
-            return {"message": f"User {username} registered successfully. User ID: {user_id}"}
+            return {"message": f"User {username} registered successfully. User ID: {user_id}"}, 201
         else:
             user_id = g.db.fetch_user_id(username)
             return {"message": f"User {username} already exists. User ID: {user_id}"}, 409
