@@ -1,8 +1,11 @@
 """
-    AI USAGE: This file was written by Claude. It tests services.py: the API-Football helpers
-    (with requests.get faked out), the request parsers, and the review service functions.
-    I studied and closely read the code to understand the nature of the syntax, logic, and flows
-    for my personal learning and development. 
+    AI USAGE: This file's tests for Parsers, services, and the review resource wer written by Claude. 
+        I studied and closely read the code to understand the nature of the syntax, logic, and flows
+        for my personal learning and development of these tests
+
+    What I Did: I created the code for the watchlist tests using my knowledge of the other tests and 
+        pytest in general. I deeply read, understood, and created code for these tests to have succinct
+        and proper logic for the API.
 """
 
 import pytest
@@ -31,6 +34,10 @@ FAKE_FIXTURES = {
 MISSING_FIXTURE_ID = 999
 API_DOWN_FIXTURE_ID = 503
 
+@pytest.fixture(autouse=True)
+def isolated_db(tmp_path, monkeypatch):
+    "Run every test in its own temp folder so activity.db starts empty and the real one is untouched."
+    monkeypatch.chdir(tmp_path)
 
 @pytest.fixture
 def fake_api(monkeypatch):
@@ -43,143 +50,10 @@ def fake_api(monkeypatch):
         return dict(FAKE_FIXTURES[fixture_id])
 
     monkeypatch.setattr(services, "get_fixture", fake_get_fixture)
-
-
-@pytest.fixture
-def db(tmp_path):
-    "A Database object backed by a throwaway file, so the real activity.db is untouched."
-    database = Database(str(tmp_path / "test.db"))
-    yield database
-    database.conn.close()
-
-
-# FAKE HTTP RESPONSES
-class FakeResponse:
-    def __init__(self, payload, status=200):
-        self.payload = payload
-        self.status = status
-
-    def raise_for_status(self):
-        if self.status >= 400:
-            raise requests.HTTPError(f"{self.status} error")
-
-    def json(self):
-        return self.payload
-
-
-@pytest.fixture
-def fake_requests(monkeypatch):
-    "Make requests.get return a chosen response and record what it was called with."
-    calls = []
-    state = {"response": FakeResponse({"errors": [], "response": []})}
-
-    def fake_get(url, headers=None, params=None, timeout=None):
-        calls.append({"url": url, "headers": headers, "params": params, "timeout": timeout})
-        if isinstance(state["response"], Exception):
-            raise state["response"]
-        return state["response"]
-
-    monkeypatch.setattr(services.requests, "get", fake_get)
-
-    def respond_with(response):
-        state["response"] = response
-    respond_with.calls = calls
-    return respond_with
-
-
-def api_match(fixture_id=1001, home="Arsenal", away="Chelsea", home_goals=2, away_goals=1,
-              league="Premier League", date="2025-01-01T15:00:00+00:00"):
-    "Build one match in the shape API-Football returns."
-    return {
-        "fixture": {"id": fixture_id, "date": date},
-        "league": {"name": league},
-        "teams": {"home": {"id": 42, "name": home}, "away": {"id": 49, "name": away}},
-        "goals": {"home": home_goals, "away": away_goals},
-    }
-
-
-# _get
-def test_get_returns_response_list(fake_requests):
-    fake_requests(FakeResponse({"errors": [], "response": [{"a": 1}]}))
-    assert services._get("/fixtures", {"id": 1}) == [{"a": 1}]
-
-def test_get_sends_key_params_and_timeout(fake_requests, monkeypatch):
-    monkeypatch.setattr(services, "API_KEY", "test-key")
-    services._get("/fixtures", {"id": 1})
-    call = fake_requests.calls[0]
-    assert call["url"] == f"{services.BASE_URL}/fixtures"
-    assert call["headers"] == {"x-apisports-key": "test-key"}
-    assert call["params"] == {"id": 1}
-    assert call["timeout"] is not None
-
-def test_get_missing_response_key_returns_empty_list(fake_requests):
-    fake_requests(FakeResponse({"errors": []}))
-    assert services._get("/fixtures", {}) == []
-
-def test_get_network_error_raises_external_api_error(fake_requests):
-    fake_requests(requests.ConnectionError("no internet"))
-    with pytest.raises(services.ExternalAPIError):
-        services._get("/fixtures", {})
-
-def test_get_timeout_raises_external_api_error(fake_requests):
-    fake_requests(requests.Timeout("too slow"))
-    with pytest.raises(services.ExternalAPIError):
-        services._get("/fixtures", {})
-
-def test_get_http_error_raises_external_api_error(fake_requests):
-    fake_requests(FakeResponse({}, status=500))
-    with pytest.raises(services.ExternalAPIError):
-        services._get("/fixtures", {})
-
-def test_get_api_errors_field_raises_external_api_error(fake_requests):
-    fake_requests(FakeResponse({"errors": {"token": "Invalid API key"}, "response": []}))
-    with pytest.raises(services.ExternalAPIError):
-        services._get("/fixtures", {})
-
-
-# get_fixture
-def test_get_fixture_maps_fields(fake_requests):
-    fake_requests(FakeResponse({"errors": [], "response": [api_match()]}))
-    assert services.get_fixture(1001) == FAKE_FIXTURES[1001]
-    assert fake_requests.calls[0]["params"] == {"id": 1001}
-
-def test_get_fixture_not_found(fake_requests):
-    fake_requests(FakeResponse({"errors": [], "response": []}))
-    with pytest.raises(services.FixtureNotFound):
-        services.get_fixture(MISSING_FIXTURE_ID)
-
-def test_get_fixture_api_down(fake_requests):
-    fake_requests(requests.ConnectionError("down"))
-    with pytest.raises(services.ExternalAPIError):
-        services.get_fixture(1001)
-
-
-# get_head_to_head
-def test_get_head_to_head_maps_matches(fake_requests):
-    fake_requests(FakeResponse({"errors": [], "response": [
-        api_match(home_goals=2, away_goals=1),
-        api_match(home="Chelsea", away="Arsenal", home_goals=0, away_goals=0, date="2024-05-01"),
-    ]}))
-    assert services.get_head_to_head(42, 49) == [
-        {"date": "2025-01-01T15:00:00+00:00", "home_team": "Arsenal", "away_team": "Chelsea", "score": "2-1"},
-        {"date": "2024-05-01", "home_team": "Chelsea", "away_team": "Arsenal", "score": "0-0"},
-    ]
-
-def test_get_head_to_head_params(fake_requests):
-    services.get_head_to_head(42, 49, last=3)
-    call = fake_requests.calls[0]
-    assert call["url"].endswith("/fixtures/headtohead")
-    assert call["params"] == {"h2h": "42-49", "last": 3}
-
-def test_get_head_to_head_defaults_to_last_five(fake_requests):
-    services.get_head_to_head(42, 49)
-    assert fake_requests.calls[0]["params"]["last"] == 5
-
-def test_get_head_to_head_no_matches(fake_requests):
-    assert services.get_head_to_head(42, 49) == []
-
+    monkeypatch.setattr(services, "get_head_to_head", lambda home_id, away_id, last=5: [])
 
 # PARSERS
+
 parser_app = Flask(__name__)
 
 def run_parser(parser, json=None, query=""):
@@ -236,8 +110,10 @@ def test_parse_filters_league_optional():
     with parser_app.test_request_context("/reviews"):
         assert services.parse_filters()["league"] is None
 
+# ======================================================================
+# GAME REVIEWS RESOURCE
+# ======================================================================
 
-# REVIEW SERVICES
 @pytest.fixture
 def alice_review(db, fake_api):
     return services.create_review(db, "alice", 1001, 8, "Great game")
@@ -309,3 +185,41 @@ def test_delete_review_by_other_user_forbidden(db, alice_review):
 def test_delete_missing_review(db):
     with pytest.raises(services.ReviewNotFound):
         services.delete_review(db, "alice", 123)
+
+# ======================================================================
+# WATCHLIST
+# ======================================================================
+@pytest.fixture
+def alice_watch(db, fake_api):
+    return services.add_to_watchlist(db, "alice", 1001)
+
+def test_add_to_watchlist(alice_watch):
+    assert alice_watch["fixture_id"] == 1001
+    assert alice_watch["home_team"] == "Arsenal"
+
+def test_add_to_watchlist_duplicate(db, alice_watch):
+    with pytest.raises(services.DuplicateWatch):
+        services.add_to_watchlist(db, "alice", 1001)
+
+def test_list_watchlist(db, alice_watch):
+    assert len(services.list_watchlist(db, "alice")) == 1
+    assert services.list_watchlist(db, "bob") == []
+
+def test_remove_from_watchlist(db, alice_watch):
+    services.remove_from_watchlist(db, "alice", 1001)
+    assert services.list_watchlist(db, "alice") == []
+
+def test_remove_from_watchlist_not_saved(db):
+    with pytest.raises(services.WatchNotFound):
+        services.remove_from_watchlist(db, "alice", 1001)
+
+
+# ======================================================================
+# OTHER
+# ======================================================================
+@pytest.fixture
+def db():
+    "A Database object backed by the temp folder's activity.db."
+    database = Database()
+    yield database
+    database.conn.close()

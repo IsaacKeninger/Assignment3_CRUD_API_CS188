@@ -119,12 +119,10 @@ def parse_review() -> dict:
     parser.add_argument("review", type=str, required=False, location='json')
     data = parser.parse_args()
 
-    # Validate Rating Criteria
     if not 1 <= data["rating"] <= 10:
         abort(400, message="rating must be between 1 and 10.")
     if data["review"] is not None and not data["review"].strip():
         abort(400, message="review cannot be blank.")
-
     return data
 
 def parse_review_changes() -> dict:
