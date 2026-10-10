@@ -10,9 +10,9 @@ External API: https://www.api-football.com/
    ```bash
    uv sync
    ```
-2. Create a `.env` file in the project root with tje API-Football key (In blackboard):
+2. Create a `.env` file in the project root with tje API-Football key:
    ```
-   API_KEY=your_api_football_key
+   API_KEY= api_football_key, sent in blackboard submission
    ```
 3. Start the server via:
    ```bash
