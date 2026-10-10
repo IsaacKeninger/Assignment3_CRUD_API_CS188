@@ -1,13 +1,14 @@
 """
     AI USAGE: I used Claude to help me with creating the SQL queries for creating the reviews table
-    as well as for helping in general understanding of the file. Claude also provided the
-    insert_review, get_review and list_reviews methods, and suggested update_review and
-    delete_review, which I typed in and adjusted. Claude also pointed out bugs here (missing
-    IF NOT EXISTS, user_id column type, hard-coded database path). Claude wrote the watchlist
-    table and its add_watch, list_watchlist and remove_watch methods. Claude showed how to pass the
-    database path into Database and read it in get_db from the app config, and fixed a syntax
-    error in my version of the Database constructor. I either created the rest
-    of the file myself or it was copied over from past class activites and adjusted accordingly.
+        as well as for helping in general understanding of the file for development purposes. The
+        insert_review, get_review and list_reviews methods, update_review, and delete_review,
+        were suggested to be created (no code generated) which I eventually coded and  in and adjusted.
+        Claude also pointed out bugs here (missing IF NOT EXISTS, user_id column type, hard-coded database path)
+        along with the watchlist (3rd endpoint related) methods. Claude explained to me how to pass the
+        database path into Database and read it in get_db from the app config to me as well. 
+     
+    What I did:  I created the rest of the file myself or it was copied over from past class activites and adjusted accordingly.
+        I still have a good understanding of the code and wrote a the majority of it. 
 """
 
 import sqlite3
