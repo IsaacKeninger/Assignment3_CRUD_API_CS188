@@ -1,12 +1,13 @@
 """
     AI USAGE: This file was adapted from the class API activity. Claude suggested
     how to register the /reviews routes with an id in the URL and how to pass a configurable
-    database path through create_app. It did not write the rest of this file.
+    database path through create_app, and added the /watchlist route. It did not write the rest
+    of this file.
 """
 
 from flask import Flask, g
 from cs188_a3.auth import Register
-from cs188_a3.resources import GameReviews
+from cs188_a3.resources import GameReviews, Watchlist
 from flask_restful import Api
 from flask_talisman import Talisman
 from cs188_a3._constants import PROJECT_ROOT
@@ -19,6 +20,7 @@ def init_api(app):
     api = Api(app)
     api.add_resource(Register, '/register')
     api.add_resource(GameReviews, '/reviews', '/reviews/<int:review_id>')
+    api.add_resource(Watchlist, '/watchlist', '/watchlist/<int:fixture_id>')
 
 def create_app(with_ssl=True) -> Flask:
     app = Flask(__name__)
