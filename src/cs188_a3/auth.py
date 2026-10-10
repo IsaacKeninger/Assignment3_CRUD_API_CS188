@@ -1,9 +1,16 @@
+"""
+    AI USAGE: This file was adapted from the class API activity. Claude  was used
+    only to point out bugs: package-style imports, storing the numeric user id in g.user_id
+    instead of the username, and status codes for /register (201 on success, 400 for a short
+    password). It did not write the code in this file.
+"""
+
 from functools import wraps
 
 from flask import g
 from flask_restful import Resource, reqparse, request
 from flask_bcrypt import Bcrypt
-from db import get_db
+from cs188_a3.db import get_db
 
 # Endpoint Authorization Decorator
 def auth_required(func):

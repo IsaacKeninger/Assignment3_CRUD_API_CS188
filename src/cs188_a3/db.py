@@ -1,16 +1,11 @@
 """
     AI USAGE: I used Claude to help me with creating the SQL queries for creating the reviews table
-<<<<<<< Updated upstream
-    as well as for helping in general understanding of the file. I either created the rest of the
-    file myself or it was copied over from past class activites and adjusted accordingly.
-=======
     as well as for helping in general understanding of the file. Claude also provided the
     insert_review, get_review and list_reviews methods, and suggested update_review and
     delete_review, which I typed in and adjusted. Claude also pointed out bugs here (missing
     IF NOT EXISTS, user_id column type, hard-coded database path). Claude wrote the watchlist
     table and its add_watch, list_watchlist and remove_watch methods. I either created the rest
     of the file myself or it was copied over from past class activites and adjusted accordingly.
->>>>>>> Stashed changes
 """
 
 import sqlite3
@@ -69,7 +64,7 @@ class Database:
         # Claude was used here!
         with self.conn:
             self.conn.execute("""
-                CREATE TABLE reviews (
+                CREATE TABLE IF NOT EXISTS reviews (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id TEXT NOT NULL,
                 fixture_id INTEGER NOT NULL,
@@ -81,8 +76,6 @@ class Database:
                 UNIQUE (user_id, fixture_id)
                 );""")
 
-<<<<<<< Updated upstream
-=======
     def insert_review(self, user_id: int, fixture_id: int, fixture: dict, rating: int, review: str | None) -> int:
         "Insert a review and returns its id. Raises error on a duplicate insertion."
         with self.conn:
@@ -202,7 +195,6 @@ class Database:
             )
         return cursor.rowcount > 0
 
->>>>>>> Stashed changes
 def get_db() -> Database:
     if "db" not in g:
         g.db = Database()
