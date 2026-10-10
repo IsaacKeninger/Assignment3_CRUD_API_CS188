@@ -50,6 +50,7 @@ def fake_api(monkeypatch):
         return dict(FAKE_FIXTURES[fixture_id])
 
     monkeypatch.setattr(services, "get_fixture", fake_get_fixture)
+    monkeypatch.setattr(services, "get_head_to_head", lambda home_id, away_id, last=5: [])
 
 # PARSERS
 
@@ -188,7 +189,29 @@ def test_delete_missing_review(db):
 # ======================================================================
 # WATCHLIST
 # ======================================================================
-# (no watchlist tests yet)
+@pytest.fixture
+def alice_watch(db, fake_api):
+    return services.add_to_watchlist(db, "alice", 1001)
+
+def test_add_to_watchlist(alice_watch):
+    assert alice_watch["fixture_id"] == 1001
+    assert alice_watch["home_team"] == "Arsenal"
+
+def test_add_to_watchlist_duplicate(db, alice_watch):
+    with pytest.raises(services.DuplicateWatch):
+        services.add_to_watchlist(db, "alice", 1001)
+
+def test_list_watchlist(db, alice_watch):
+    assert len(services.list_watchlist(db, "alice")) == 1
+    assert services.list_watchlist(db, "bob") == []
+
+def test_remove_from_watchlist(db, alice_watch):
+    services.remove_from_watchlist(db, "alice", 1001)
+    assert services.list_watchlist(db, "alice") == []
+
+def test_remove_from_watchlist_not_saved(db):
+    with pytest.raises(services.WatchNotFound):
+        services.remove_from_watchlist(db, "alice", 1001)
 
 
 # ======================================================================
