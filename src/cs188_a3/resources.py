@@ -2,7 +2,8 @@
     AI USAGE: I used Claude to help restructure this file into thin request handlers that parse
     the request, call the service layer, and turn service exceptions into HTTP responses. Claude
     suggested the layout of post, get, patch and delete and the parse_review function, which I
-    adapted. Claude wrote parse_review_changes, parse_filters and the list mode of get.
+    adapted. Claude wrote parse_review_changes, parse_filters and the list mode of get. Claude also
+    added the Forbidden (403) handling to patch and fixed its 404 message.
 """
 
 from flask import g
