@@ -1,7 +1,9 @@
 """
     AI USAGE: I used Claude to help me with creating the SQL queries for creating the reviews table
     as well as for helping in general understanding of the file. Claude also provided the
-    insert_review and get_review methods, which I typed in and adjusted. I either created the rest
+    insert_review, get_review and list_reviews methods, and suggested update_review and
+    delete_review, which I typed in and adjusted. Claude also pointed out bugs here (missing
+    IF NOT EXISTS, user_id column type, hard-coded database path). I either created the rest
     of the file myself or it was copied over from past class activites and adjusted accordingly.
 """
 

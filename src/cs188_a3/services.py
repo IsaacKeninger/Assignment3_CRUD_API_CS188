@@ -6,7 +6,6 @@
     choice of API-Football endpoints, which I typed in, debugged and documented myself.
 """
 
-
 import os
 import requests
 from dotenv import load_dotenv

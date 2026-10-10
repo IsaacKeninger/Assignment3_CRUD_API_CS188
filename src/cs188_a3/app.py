@@ -1,3 +1,9 @@
+"""
+    AI USAGE: This file was adapted from the class API activity. Claude suggested
+    how to register the /reviews routes with an id in the URL and how to pass a configurable
+    database path through create_app. It did not write the rest of this file.
+"""
+
 from flask import Flask, g
 from cs188_a3.auth import Register
 from cs188_a3.resources import GameReviews
