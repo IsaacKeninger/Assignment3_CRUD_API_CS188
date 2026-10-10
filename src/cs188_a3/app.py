@@ -12,7 +12,7 @@ _KEYFILE_PATH = os.path.join(PROJECT_ROOT, 'MyKey.pem')
 def init_api(app):
     api = Api(app)
     api.add_resource(Register, '/register')
-    api.add_resource(GameReviews, '/game_reviews')
+    api.add_resource(GameReviews, '/reviews', '/reviews/<int:review_id>')
 
 def create_app(with_ssl=True) -> Flask:
     app = Flask(__name__)

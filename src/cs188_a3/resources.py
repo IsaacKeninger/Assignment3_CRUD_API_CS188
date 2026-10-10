@@ -1,153 +1,98 @@
-from flask_restful import Resource, reqparse
-from auth import auth_required
-from db import get_db
-from cs188_a3.services import get_fixture, FixtureNotFound, ExternalAPIError
+"""
+    AI USAGE: I used Claude to help restructure this file into thin request handlers that parse
+    the request, call the service layer, and turn service exceptions into HTTP responses. Claude
+    suggested the layout of post, get, patch and delete and the parse_review function, which I
+    adapted. Claude wrote parse_review_changes, parse_filters and the list mode of get.
+"""
+
+from flask import g
+from flask_restful import Resource, reqparse, abort
+from cs188_a3.auth import auth_required
+from cs188_a3.db import get_db
+from cs188_a3 import services
+
+def parse_review() -> dict:
+    "Read and Validate the body of POST /reviews"
+    parser = reqparse.RequestParser()
+    parser.add_argument("fixture_id", type=int, required=True, location='json',
+                        help="fixture_id is required and must be an integer.")
+    parser.add_argument("rating", type=int, required=True, location='json',
+                        help="rating is required and must be an integer.")
+    parser.add_argument("review", type=str, required=False, location='json')
+    return parser.parse_args()
+
+def parse_review_changes() -> dict:
+    "Read and validate the body of PATCH /reviews/<id>. Both fields are optional."
+    parser = reqparse.RequestParser()
+    parser.add_argument("rating", type=int, required=False, location='json',
+                        help="rating must be an integer.")
+    parser.add_argument("review", type=str, required=False, location='json')
+    changes = parser.parse_args()
+
+    if changes["rating"] is None and changes["review"] is None:
+        abort(400, message="Provide a rating and/or review to update.")
+    if changes["rating"] is not None and not 1 <= changes["rating"] <= 10:
+        abort(400, message="rating must be between 1 and 10.")
+    if changes["review"] is not None and not changes["review"].strip():
+        abort(400, message="review cannot be blank.")
+    return changes
+
+# CLAUDE
+def parse_filters() -> dict:
+    "Read the optional query parameters of GET /reviews."
+    parser = reqparse.RequestParser()
+    parser.add_argument("league", type=str, required=False, location='args')
+    return parser.parse_args()
 
 class GameReviews(Resource):
 
     @auth_required
     def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument("fixture_id", type=int, required=True, location='json',
-                            help="fixture_id is required and must be an integer.")
-        parser.add_argument("rating", type=int, required=True, location='json',
-                            help="rating is required and must be an integer.")
-        parser.add_argument("review", type=str, required=False, location='json')
-        args = parser.parse_args()
+        "Add a users review."
 
-        if not 1 <= args["rating"] <= 10:
-            return {"message": "rating must be between 1 and 10."}, 400
-        if args["review"] is not None and not args["review"].strip():
-            return {"message": "review cannot be blank."}, 400
+        data = parse_review()
+
+        try: 
+            review = services.create_review(get_db(), g.user_id, data["fixture_id"], data["rating"], data["review"])
+        except services.FixtureNotFound:
+            return {"message": f"Fixture {data['fixture_id']} not found."}, 404
+        except services.DuplicateReview:
+            return {"message": "This review has already been reviewed."}, 409
+        except services.ExternalAPIError:
+            return {"message": "Football API is currently unavailable"}, 502
+        return review, 201, {"Location": f"/reviews/{review['id']}"}
+
+    def get(self, review_id: int | None = None):
+        "Return one review, or list all reviews)."
+        if review_id is None:
+            filters = parse_filters()
+            return services.list_reviews(get_db(), filters["league"]), 200
 
         try:
-            fixture = get_fixture(args["fixture_id"])
-        except FixtureNotFound:
-            return {"message": f"Fixture {args['fixture_id']} not found."}, 404
-        except ExternalAPIError:
-            return {"message": "Football API is unavailable, try again later."}, 502
+            return services.get_review(get_db(), review_id), 200
+        except services.ReviewNotFound:
+            return {"message": f"Review {review_id} not found."}, 404
 
-        db = get_db()
-        cursor = db.conn.cursor()
+    @auth_required
+    def patch(self, review_id: int):
+        "Update a users review."
+
+        changes = parse_review_changes()
+
         try:
-            cursor.execute(
-                """INSERT INTO reviews (user_id, fixture_id, home_team, away_team,
-                   home_goals, away_goals, league, match_date, rating, review)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (g.user_id, args["fixture_id"], fixture["home_team"], fixture["away_team"],
-                 fixture["home_goals"], fixture["away_goals"], fixture["league"],
-                 fixture["match_date"], args["rating"], args["review"]),
-            )
-            db.conn.commit()
-        except sqlite3.IntegrityError:
-            return {"message": "You have already reviewed this fixture."}, 409
-        new_id = cursor.lastrowid
+            review = services.patch_review(get_db(), g.user_id, review_id, changes["rating"], changes["review"])
+        except services.ReviewNotFound:
+            return {"message": f"Fixture {review_id} not found."}, 404       
 
-        response = {
-            "id": new_id,
-            "user_id": g.user_id,
-            "fixture_id": args["fixture_id"],
-            "home_team": fixture["home_team"],
-            "away_team": fixture["away_team"],
-            "home_goals": fixture["home_goals"],
-            "away_goals": fixture["away_goals"],
-            "league": fixture["league"],
-            "match_date": fixture["match_date"],
-            "rating": args["rating"],
-            "review": args["review"],
-        }
-        return response, 201, {"Location": f"/reviews/{new_id}"}
-    
-    def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument(
-            "league", type=str, required=False, location='args'
-        )
-        parser.add_argument(
-            "id", type=str, required=False, location='args'
-        )
-
-        args = parser.parse_args()
-        league = args["league"]
-        team_id = args["id"]
-
-        db = get_db()
-
-        cursor = db.conn.cursor()
-
-        if team_id:
-            cursor.execute(
-                "SELECT * FROM teams WHERE id = ?",
-                (team_id,)
-            )
-        elif league:
-            cursor.execute(
-                "SELECT * FROM teams WHERE league = ?",
-                (league,)
-            )
-        else:
-            cursor.execute(
-                "SELECT * FROM teams",
-            )
-
-        response = cursor.fetchall()
-        return response, 201
-
-    # Tried out AI on implement. Claude Code.
-    @auth_required
-    def patch(self):
-        parser = reqparse.RequestParser()
-
-        parser.add_argument(
-            "id", type=str, required=True, location='args'
-        )
-        parser.add_argument(
-            "league", type=str, required=False, location='json'
-        )
-
-        args = parser.parse_args()
-        team_id = args["id"]
-        league = args["league"]
-
-        db = get_db()
-        cursor = db.conn.cursor()
-
-        if league:
-            cursor.execute(
-                "UPDATE teams SET league = ? WHERE id = ?",
-                (league, team_id)
-            )
-            db.conn.commit()
-
-        cursor.execute(
-            "SELECT * FROM teams WHERE id = ?",
-            (team_id,)
-        )
-        team = cursor.fetchone()
-        if team is None:
-            return {"message": f"Team {team_id} not found"}, 404
-
-        return team, 200
+        return review, 200
 
     @auth_required
-    def delete(self):
-        parser = reqparse.RequestParser()
-
-        parser.add_argument(
-            "id", type=str, required=True, location='args'
-        )
-        
-        args = parser.parse_args()
-        team_id = args["id"]
-
-        db = get_db()
-        cursor = db.conn.cursor()
-
-        cursor.execute("DELETE FROM teams WHERE id = ?",
-                        (team_id,))
-        db.conn.commit()
-
-        if cursor.rowcount == 0: # Meaning, if no rows have changed.
-            return {"message": f"Team {team_id} not found"}, 404
-        
-        return {"message": f"Team {team_id} Successfully Deleted."}, 201
+    def delete(self, review_id):
+        "Delete a users review."
+        try:
+            services.delete_review(get_db(), g.user_id, review_id)
+        except services.ReviewNotFound:
+            return {"message": f"Review {review_id} not found."}, 404
+        except services.Forbidden:
+            return {"message": "You can only delete your own reviews."}, 403
+        return {"message": f"Review {review_id} deleted."}, 200            

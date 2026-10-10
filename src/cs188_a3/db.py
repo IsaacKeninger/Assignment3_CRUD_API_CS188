@@ -1,7 +1,8 @@
 """
     AI USAGE: I used Claude to help me with creating the SQL queries for creating the reviews table
-    as well as for helping in general understanding of the file. I either created the rest of the
-    file myself or it was copied over from past class activites and adjusted accordingly.
+    as well as for helping in general understanding of the file. Claude also provided the
+    insert_review and get_review methods, which I typed in and adjusted. I either created the rest
+    of the file myself or it was copied over from past class activites and adjusted accordingly.
 """
 
 import sqlite3
@@ -70,6 +71,80 @@ class Database:
                 review TEXT,
                 UNIQUE (user_id, fixture_id)
                 );""")
+
+    def insert_review(self, user_id: int, fixture_id: int, fixture: dict, rating: int, review: str | None) -> int:
+        "Insert a review and returns its id. Raises error on a duplicate insertion."
+        with self.conn:
+            cursor = self.conn.execute(
+                """INSERT INTO reviews (user_id, fixture_id, home_team, away_team, home_goals,
+                away_goals, league, match_date, rating, review) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (user_id, fixture_id, fixture["home_team"], fixture["away_team"], fixture["home_goals"], 
+                 fixture["away_goals"], fixture["league"], fixture["match_date"], rating, review), 
+            )
+        return cursor.lastrowid
+
+    def get_review(self, review_id: int) -> dict:
+        cursor = self.conn.execute(
+        """SELECT id, user_id, fixture_id, home_team, away_team, home_goals,
+        away_goals, league, match_date, rating, review FROM reviews WHERE id = ?""",
+        (review_id,),
+        )
+        row = cursor.fetchone()
+
+        if row is None:
+            return None
+        return {
+            "id": row[0],
+            "user_id": row[1],
+            "fixture_id": row[2],
+            "home_team": row[3],
+            "away_team": row[4],
+            "home_goals": row[5],
+            "away_goals": row[6],
+            "league": row[7],
+            "match_date": row[8],
+            "rating": row[9],
+            "review": row[10],
+        }
+
+    def update_review(self, review_id: int, rating: int | None, review: str | None) -> None:
+        with self.conn:
+            if rating is not None:
+                self.conn.execute("UPDATE reviews SET rating = ? WHERE id = ?",
+                                  (rating, review_id),
+                                  )
+            if review is not None:
+                self.conn.execute(
+                    "UPDATE reviews SET review = ? WHERE id = ?",
+                    (review, review_id),
+                )
+
+    def delete_review(self, review_id: int) -> None:
+        "Delete a review via id."
+        with self.conn:
+            self.conn.execute(
+                "DELETE FROM reviews WHERE id = ?",
+                (review_id,),
+            )
+
+    def list_reviews(self, league: str | None) -> list[dict]:
+        if league:
+            cursor = self.conn.execute(
+                """SELECT id, user_id, fixture_id, home_team, away_team, home_goals,
+                away_goals, league, match_date, rating, review FROM reviews WHERE league = ?""",
+                (league,),
+            )
+        else:
+            cursor = self.conn.execute(
+                """SELECT id, user_id, fixture_id, home_team, away_team, home_goals,
+                away_goals, league, match_date, rating, review FROM reviews"""
+            )
+        return [
+            {"id": row[0], "user_id": row[1], "fixture_id": row[2], "home_team": row[3],
+            "away_team": row[4], "home_goals": row[5], "away_goals": row[6], "league": row[7],
+            "match_date": row[8], "rating": row[9], "review": row[10]}
+            for row in cursor.fetchall()
+        ]
 
 def get_db() -> Database:
     if "db" not in g:

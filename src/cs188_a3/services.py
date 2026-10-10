@@ -2,7 +2,8 @@
     AI USAGE: The _get helper function was developed by Claude. I used claude as a way to teach me
     and demonstrate how to make this effective requests helper function of which I could use.This
     helped make my learning process more enjoyable and showed me how to write good code for reaching
-    external API's. I created the remainder of the file myself building off of this helper.
+    external API's. Claude also suggested the get_fixture and get_head_to_head functions and the
+    choice of API-Football endpoints, which I typed in, debugged and documented myself.
 """
 
 
