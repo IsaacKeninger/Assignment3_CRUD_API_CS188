@@ -25,13 +25,16 @@ def auth_required(func):
         valid = hashed_pwd is not None and Bcrypt().check_password_hash(hashed_pwd, auth.password)
         if not valid:
             return {"message": "Invalid credentials"}, 401
-
-        g.user_id = auth.username
+        
+        g.user_id = g.db.fetch_user_id(auth.username)
         return func(*args, **kwargs)
     return wrapper
 
 # Register User Endpoint
 class Register(Resource):
+    """
+    This endpoint will register a user with username and password for authentication purposes.
+    """
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -46,6 +49,7 @@ class Register(Resource):
         username = args['username']
         password = args['password']
 
+        # Type Checking and Validation for Username and Password
         if not username or not password:
             return {"message": "Username or Password is undefined."}, 400
         elif len(password) < 8:
