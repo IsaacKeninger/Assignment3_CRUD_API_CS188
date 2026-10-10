@@ -10,7 +10,7 @@ from functools import wraps
 from flask import g
 from flask_restful import Resource, reqparse, request
 from flask_bcrypt import Bcrypt
-from db import get_db
+from cs188_a3.db import get_db
 
 # Endpoint Authorization Decorator
 def auth_required(func):

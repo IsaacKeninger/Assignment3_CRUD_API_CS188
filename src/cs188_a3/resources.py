@@ -3,7 +3,8 @@
     the request, call the service layer, and turn service exceptions into HTTP responses. Claude
     suggested the layout of post, get, patch and delete and the parse_review function, which I
     adapted. Claude wrote parse_review_changes, parse_filters and the list mode of get. Claude also
-    added the Forbidden (403) handling to patch and fixed its 404 message.
+    added the Forbidden (403) handling to patch and fixed its 404 message. Claude wrote the
+    Watchlist resource.
 """
 
 from flask import g
@@ -65,4 +66,36 @@ class GameReviews(Resource):
             return {"message": f"Review {review_id} not found."}, 404
         except services.Forbidden:
             return {"message": "You can only delete your own reviews."}, 403
-        return {"message": f"Review {review_id} deleted."}, 200            
+        return {"message": f"Review {review_id} deleted."}, 200
+
+class Watchlist(Resource):
+
+    @auth_required
+    def post(self):
+        "Save a fixture to the user's watchlist."
+
+        data = services.parse_watch()
+
+        try:
+            watch = services.add_to_watchlist(get_db(), g.user_id, data["fixture_id"])
+        except services.FixtureNotFound:
+            return {"message": f"Fixture {data['fixture_id']} not found."}, 404
+        except services.DuplicateWatch:
+            return {"message": f"Fixture {data['fixture_id']} is already on your watchlist."}, 409
+        except services.ExternalAPIError:
+            return {"message": "Football API is currently unavailable"}, 502
+        return watch, 201, {"Location": "/watchlist"}
+
+    @auth_required
+    def get(self):
+        "List the user's watchlist."
+        return services.list_watchlist(get_db(), g.user_id), 200
+
+    @auth_required
+    def delete(self, fixture_id: int):
+        "Remove a fixture from the user's watchlist."
+        try:
+            services.remove_from_watchlist(get_db(), g.user_id, fixture_id)
+        except services.WatchNotFound:
+            return {"message": f"Fixture {fixture_id} is not on your watchlist."}, 404
+        return {"message": f"Fixture {fixture_id} removed from your watchlist."}, 200

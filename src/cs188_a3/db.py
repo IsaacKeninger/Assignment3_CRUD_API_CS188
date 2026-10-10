@@ -3,7 +3,8 @@
     as well as for helping in general understanding of the file. Claude also provided the
     insert_review, get_review and list_reviews methods, and suggested update_review and
     delete_review, which I typed in and adjusted. Claude also pointed out bugs here (missing
-    IF NOT EXISTS, user_id column type, hard-coded database path). I either created the rest
+    IF NOT EXISTS, user_id column type, hard-coded database path). Claude wrote the watchlist
+    table and its add_watch, list_watchlist and remove_watch methods. I either created the rest
     of the file myself or it was copied over from past class activites and adjusted accordingly.
 """
 
@@ -21,6 +22,7 @@ class Database:
         self.conn = connect()
         self.create_users_table()
         self.create_reviews_table()
+        self.create_watchlist_table()
 
     def create_users_table(self):
         with self.conn:
@@ -62,7 +64,7 @@ class Database:
         # Claude was used here!
         with self.conn:
             self.conn.execute("""
-                CREATE TABLE reviews (
+                CREATE TABLE IF NOT EXISTS reviews (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id TEXT NOT NULL,
                 fixture_id INTEGER NOT NULL,
@@ -147,6 +149,51 @@ class Database:
             "match_date": row[8], "rating": row[9], "review": row[10]}
             for row in cursor.fetchall()
         ]
+
+    # WATCHLIST
+    def create_watchlist_table(self):
+        with self.conn:
+            self.conn.execute("""
+                CREATE TABLE IF NOT EXISTS watchlist (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                fixture_id INTEGER NOT NULL,
+                home_team TEXT, away_team TEXT,
+                league TEXT, match_date TEXT,
+                UNIQUE (user_id, fixture_id)
+                );""")
+
+    def add_watch(self, user_id, fixture_id: int, fixture: dict) -> None:
+        "Save a fixture to a user's watchlist. Raises IntegrityError if it is already saved."
+        with self.conn:
+            self.conn.execute(
+                """INSERT INTO watchlist (user_id, fixture_id, home_team, away_team, league, match_date)
+                VALUES (?, ?, ?, ?, ?, ?)""",
+                (user_id, fixture_id, fixture["home_team"], fixture["away_team"],
+                 fixture["league"], fixture["match_date"]),
+            )
+
+    def list_watchlist(self, user_id) -> list[dict]:
+        "Return every fixture a user has saved, soonest match first."
+        cursor = self.conn.execute(
+            """SELECT fixture_id, home_team, away_team, league, match_date FROM watchlist
+            WHERE user_id = ? ORDER BY match_date""",
+            (user_id,),
+        )
+        return [
+            {"fixture_id": row[0], "home_team": row[1], "away_team": row[2],
+             "league": row[3], "match_date": row[4]}
+            for row in cursor.fetchall()
+        ]
+
+    def remove_watch(self, user_id, fixture_id: int) -> bool:
+        "Remove a fixture from a user's watchlist. Returns False if it wasn't saved."
+        with self.conn:
+            cursor = self.conn.execute(
+                "DELETE FROM watchlist WHERE user_id = ? AND fixture_id = ?",
+                (user_id, fixture_id),
+            )
+        return cursor.rowcount > 0
 
 def get_db() -> Database:
     if "db" not in g:
