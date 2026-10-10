@@ -32,12 +32,6 @@ MISSING_FIXTURE_ID = 999
 API_DOWN_FIXTURE_ID = 503
 
 
-@pytest.fixture(autouse=True)
-def isolated_db(tmp_path, monkeypatch):
-    "Run every test in its own temp folder so activity.db starts empty and the real one is untouched."
-    monkeypatch.chdir(tmp_path)
-
-
 @pytest.fixture
 def fake_api(monkeypatch):
     "Replace get_fixture so tests use canned matches instead of calling API-Football."
@@ -52,9 +46,9 @@ def fake_api(monkeypatch):
 
 
 @pytest.fixture
-def db():
-    "A Database object backed by the temp folder's activity.db."
-    database = Database()
+def db(tmp_path):
+    "A Database object backed by a throwaway file, so the real activity.db is untouched."
+    database = Database(str(tmp_path / "test.db"))
     yield database
     database.conn.close()
 

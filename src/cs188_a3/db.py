@@ -9,17 +9,19 @@
 """
 
 import sqlite3
-from flask import g
+from flask import g, current_app
 
-def connect():
-    return sqlite3.connect('activity.db')
+DEFAULT_DB = "activity.db"
+
+def connect(path: str):
+    return sqlite3.connect(path)
 
 class Database:
-    def __init__(self):
+    def __init__(self, path: str = DEFAULT_DB):
         """
         This function initizlies the database connection and creates the tables.
         """
-        self.conn = connect()
+        self.conn = connect(path)
         self.create_users_table()
         self.create_reviews_table()
         self.create_watchlist_table()
@@ -197,5 +199,5 @@ class Database:
 
 def get_db() -> Database:
     if "db" not in g:
-        g.db = Database()
+        g.db = Database(current_app.config["DATABASE"])
     return g.db

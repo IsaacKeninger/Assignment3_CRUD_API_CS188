@@ -11,6 +11,7 @@ from cs188_a3.resources import GameReviews, Watchlist
 from flask_restful import Api
 from flask_talisman import Talisman
 from cs188_a3._constants import PROJECT_ROOT
+from cs188_a3.db import DEFAULT_DB
 import os 
 
 _CERTIFICATE_PATH = os.path.join(PROJECT_ROOT, 'MyCertificate.crt')
@@ -22,8 +23,9 @@ def init_api(app):
     api.add_resource(GameReviews, '/reviews', '/reviews/<int:review_id>')
     api.add_resource(Watchlist, '/watchlist', '/watchlist/<int:fixture_id>')
 
-def create_app(with_ssl=True) -> Flask:
+def create_app(with_ssl: bool = True, db_path: str = DEFAULT_DB) -> Flask:
     app = Flask(__name__)
+    app.config["DATABASE"] = db_path
     app.config["PREFERRED_URL_SCHEME"] = "https"
     Talisman(app, force_https=with_ssl)
     init_api(app)
